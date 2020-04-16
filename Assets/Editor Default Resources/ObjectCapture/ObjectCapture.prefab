@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6739189846098938576}
   - component: {fileID: 8576003068013941738}
   m_Layer: 0
-  m_Name: UnityChanCapture
+  m_Name: ObjectCapture
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46,7 +46,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49413ee1f9be340f6884548bdb135946, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gameObjectResource: {fileID: 100096, guid: 412b92d4feeb9c548bfa98f62c4d1022, type: 3}
   _camera: {fileID: 4344730420701068414}
   _objRoot: {fileID: 313909906654227484}
 --- !u!1 &2373249037242086231
@@ -132,7 +131,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.01
   far clip plane: 100
   field of view: 60
   orthographic: 0
