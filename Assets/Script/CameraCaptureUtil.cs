@@ -6,11 +6,12 @@ using Object = UnityEngine.Object;
 namespace CameraCapture
 {
 	[Serializable]
-	internal class Info
+	public class Info
 	{
+		[SerializeField]
 		private Camera _camera;
+		[SerializeField]
 		private RenderTexture _renderTexture;
-		private GUILayoutOption[] _options;
 
 		public Info(Camera camera, Vector2Int size)
 		{
@@ -25,10 +26,13 @@ namespace CameraCapture
 				Object.DestroyImmediate(_renderTexture);
 		}
 
-		private void CreateRenderTexture(Vector2Int size)
+		public void CreateRenderTexture(Vector2Int size)
 		{
 			if (_renderTexture != null)
+			{
+				_camera.targetTexture = null;
 				Object.DestroyImmediate(_renderTexture);
+			}
 
 			_renderTexture = new RenderTexture(size.x, size.y, 1)
 			{
@@ -37,29 +41,20 @@ namespace CameraCapture
 
 			_renderTexture.Create();
 			_camera.targetTexture = _renderTexture;
-
-			_options = new[]
-			{
-				GUILayout.MaxWidth(size.x),
-				GUILayout.MaxHeight(size.y),
-			};
 		}
 
-		internal void DrawRenderTexture()
+		public void DrawRenderTexture()
 		{
 			if (_renderTexture == null)
 				return;
 
-			// レンダリングバッファをクリアする
-			//GL.Clear(true, true, Color.clear, 0f);
-
 			_renderTexture.Release();
 			_camera.Render();
-			var rect = GUILayoutUtility.GetRect(_renderTexture.width, _renderTexture.height, _options);
+			var rect = GUILayoutUtility.GetRect(_renderTexture.width, _renderTexture.height, GUILayout.MaxWidth(_renderTexture.width), GUILayout.MaxHeight(_renderTexture.height));
 			EditorGUI.DrawTextureTransparent(rect, _renderTexture);
 		}
 
-		internal void Capture()
+		public void Capture()
 		{
 			var savePath = EditorUtility.SaveFilePanel("Select Save Path", "", "", "png");
 

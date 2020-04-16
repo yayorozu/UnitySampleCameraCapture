@@ -1,10 +1,9 @@
-﻿using System;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace CameraCapture
 {
-	internal class CameraCaptureWindow : EditorWindow
+	public class CameraCaptureWindow : EditorWindow
 	{
 		[MenuItem("Tools/Capture")]
 		private static void ShowWindow()
@@ -15,107 +14,58 @@ namespace CameraCapture
 		}
 
 		[SerializeField]
-		private CaptureParam _unityChanCapture;
+		private CaptureData _captureData;
+		[SerializeField]
+		private GameObject _captureObject;
+		[SerializeField]
+		private Vector2Int _size = new Vector2Int(300, 300);
 
-		private void OnEnable()
+		private void Release()
 		{
+			if (_captureData == null)
+				return;
+
+			_captureData.Dispose();
+			_captureData = null;
 		}
 		
-		private void OnDisable()
+		private void OnDestroy()
 		{
-			if (_unityChanCapture != null)
-			{
-				_unityChanCapture.Dispose();
-				_unityChanCapture = null;
-			}
+			Release();
 		}
 
 		private void OnGUI()
 		{
-			if (_unityChanCapture == null)
+			using (var check = new EditorGUI.ChangeCheckScope())
 			{
-				_unityChanCapture = new CaptureParam();
-				_unityChanCapture.SetUp(this);
+				_captureObject = (GameObject) EditorGUILayout.ObjectField("Capture Object", _captureObject, typeof(GameObject));
+				_size = EditorGUILayout.Vector2IntField("Size", _size);
+				
+				if (check.changed)
+				{
+					if (_captureObject == null)
+						return;
+					
+					if (_size.x <= 0 && _size.y <= 0)
+						return;
+					
+					var anim = _captureObject.GetComponent<Animator>();
+					if (anim == null)
+					{
+						Debug.LogWarning("Require Animator");
+						return;
+					}
+					
+					if (_captureData == null)
+						_captureData = new CaptureData();
+					_captureData.SetUp(this, _captureObject, _size);
+				}
 			}
 			
-			_unityChanCapture.Draw();
-		}
-	}
-
-	[Serializable]
-	public class CaptureParam
-	{
-		[SerializeField]
-		private UnityChanCapture _unityChanCapture;
-		[SerializeField]
-		private Info _info;
-		[SerializeField]
-		private EditorWindow _window;
-		
-		public void SetUp(EditorWindow window)
-		{
-			if (_unityChanCapture != null)
+			if (_captureData == null)
 				return;
-
-			_window = window;
-			
-			var obj = EditorGUIUtility.Load("UnityChanCapture.prefab");
-			_unityChanCapture = ((GameObject) GameObject.Instantiate(obj)).GetComponent<UnityChanCapture>();
-			_unityChanCapture.name = obj.name;
-			_unityChanCapture.SetUp();
-			
-			_info = new Info(_unityChanCapture.Camera, new Vector2Int(500, 500));
-		}
-
-		public void Dispose()
-		{
-			GameObject.DestroyImmediate(_unityChanCapture);
-			EditorApplication.update -= UpdateAnimation;
-		}
-
-		public void PlayAnimation(string name)
-		{
-			_unityChanCapture.Animator.speed = 1f;
-			_unityChanCapture.Animator.Play(name);
-			
-			EditorApplication.update -= UpdateAnimation;
-			EditorApplication.update += UpdateAnimation;
-		}
-
-		public void StopAnimation()
-		{
-			EditorApplication.update -= UpdateAnimation;
-		}
-
-		private void UpdateAnimation()
-		{
-			_window.Repaint();
-			_unityChanCapture.Animator.Update(Time.deltaTime);
-		}
-		
-		public void Draw()
-		{
-			if (_info != null)
-			{
-				// var pos = _camera.transform.localPosition;
-				// pos.z = EditorGUILayout.FloatField("Z", pos.z);
-				// _camera.transform.localPosition = pos;
-			}
-			_info?.DrawRenderTexture();
-
-			if (GUILayout.Button("Play"))
-			{
-				PlayAnimation("RUN00_F");
-			}
-			
-			if (GUILayout.Button("Stop"))
-			{
-				StopAnimation();
-			}
-			if (GUILayout.Button("Capture"))
-			{
-				_info?.Capture();
-			}
+						
+			_captureData.Draw();
 		}
 	}
 }
